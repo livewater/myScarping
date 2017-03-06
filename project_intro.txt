@@ -1,0 +1,28 @@
+Thank you for giving me this opportunity to introduce myself. I'm graduated from Shanghai Jiao Tong University. I recived my bachelor degree EE and master degree Electronics and 
+Communication Engineering. I want to share two interesting projects today.
+The first part is about 3D visual comfort, when I pursuing my master degree at SJTU. Obviously, everyone here may have watched a lot of 3D films. Did someone here hasn't taste 
+it? OK, when I make a contact with 3D film at 2011, it seems a brand new technology, just as VR now. Most of the films in the cinema are 2D, few USA films may has 3D options for
+the audience. But some people said they feel dizzy, headache or some other symptoms. All above this will make a bad effect on 3D film revolution. So 3D visul comfort is a hot topic
+at the stereosopic area.
+Among those effects, disparity region takes an important role.Disparity is just used to measure the difference between two views at 3D Let's see the question, when we have two
+indiviual cameras, we can have two views of the same objects. Then we can get a stereosopic image, just like our eyes. Since the dispariy affect visual comfort heavily, we want
+it be a comfort zone. Here comes my question, when the two views are not synchronized well, if one of the frame is given, how we can find the best matching frame for it from the
+candidate frame. Let's assume the left frame as a test frame, and we want to find a best matching frame at the right view. My proposed method divided it into for parts:
+1. get the keypoints. You can use the Harris, SIFT or other ways if you like. When finishing step 1, we will get a keypoints set for the test left view;
+2. get the moving information for it. Optical flow is a method widely used for extracting motion feature. It receives a keypoints set, and returns their motion information.
+3. judge the foreground and background part. The moving objects always give us more 3D sensing, while the static things nearly offer no 3D sensing. The foreground and background
+always has a big difference concerning the motion feature. So we can combine the keypoints postion and their motion feature, then give a classification for the keypoints. For a 
+brief introducing, we assume it'll be foreground and background keypoints set.
+4. Besides of this, if we taking a shot from two cameras, the points-pairs between two views will also under some other epipolar conditions. If the foreground and background part
+have different motion featrure, it will show us different geometrical paramters, they are only defined by the two camera position against each other. When we take the 
+points-pairs at the same time, the geometrical parameters keep the same. 
+5. Then we design a cost function measuring the difference between two kinds of parameters, and give an answer to this question.
+When the frames synchronized well between two views, the dispairty may in the expected comfort zone, and it will offer us a fascinating experience.
+
+Then comes my second project at Huawei. The wireless communition technology develops fast, every coroperation has its own proposals for the next wireless commuation protocals. 
+Since the wireless software heavily relied on the proposing portocals, and the wireless communication chip may make a change every year, the software framework may be designed
+as flexiable as it can be. Besides, let's take a brief look at LTE model. It contains data channels, control channels, RS for reference signal channels and so on. All these channels
+will has its own computing tasks, and some interacting tasks with other channels. In the future, low latency and big data transforming tasks means we will needs many chips to deal
+with this challege. Various tasks need to be run on the same chip, we should divide the tasks, evaluting the computing complexity, and arrange them equally to every core. OpenCL
+takes a role of assigning tasks to the idle cores. And the sofeware is decoupled from the hardwares, and the code reusing ratio will have a big increase. The message queue DSP platform
+offered is suitable ro take the role of queue at OpenCL.
