@@ -44,4 +44,4 @@ def followExternalOnly(startingSite):
     print("Random external link is: "+externalLink)
     followExternalOnly(externalLink)
 
-followExternalOnly("http://oreilly.com")
+followExternalOnly("http://bbs.sjtu.edu.cn")
