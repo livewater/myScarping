@@ -3,6 +3,10 @@
  
 import urllib2, json, urllib
 import pymysql
+import numpy as np
+import pandas as pd
+import commands
+import time
 
 #  jisuapi.com require category
 category = ["shgold", "bank"]
@@ -66,6 +70,38 @@ def saveDataShGold(cur, conn):
 
 #for val in result:
 #    print val["type"],val["typename"],val["price"],val["openingprice"],val["maxprice"],val["minprice"],val["changepercent"],val["lastclosingprice"],val["tradeamount"],val["updatetime"]
+
+#将数据从mysql中导入到pandas结构
+def loadMysqlToPandas(conn, product_name, table_name):
+    cur = conn.cursor()
+    sql_command = "USE " + product_name
+    cur.execute(sql_command)
+    sql_command = "SELECT * from "+ table_name
+    data = pd.io.sql.read_sql(sql_command, conn) 
+    data = data.drop(['ID'], axis=1)
+    return data
+
+def genCurrentTime():
+    now = int(time.time()) 
+    localtime = time.localtime(now)
+    time_format = "%Y-%m-%d %H:%M:%S"
+    res = time.strftime(time_format, localtime)
+    return res
+
+def appendPdDataForShgold(pdData, json_data, table_name):
+    ##json_data = getDataInJson(req)
+    item = json_data[cate_map_shgold[table_name]] 
+    pdData = pdData.append({'Price':item["price"], 'OpenningPrice':item["openingprice"], 'MaxPrice':item["maxprice"], 'MinPrice':item["minprice"], 'LastClosingPrice':item["lastclosingprice"], 'TradeAmount':item["tradeamount"], 'UpdateTime':item["updatetime"], 'CreatedTime':genCurrentTime()}, ignore_index=True) 
+    return pdData
+
+#存储本次新抓取数据，然后同步到数据库
+def saveDataIntoMysql(cur, pdData, table_name,  init_data_size):
+    pdNewData = pdData.ix[pdData.index[init_data_size:]]
+    pdNewArray = np.array(pdNewData)
+    mysql_command = "INSERT INTO "+table_name+" (Price, OpenningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    for row in pdNewArray:
+        cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+    cur.connection.commit()
 
 def closeDB(cur, conn):
     cur.close()
