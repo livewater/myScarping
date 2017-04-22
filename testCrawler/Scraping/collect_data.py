@@ -95,10 +95,12 @@ def appendPdDataForShgold(pdData, json_data, table_name):
     return pdData
 
 #存储本次新抓取数据，然后同步到数据库
-def saveDataIntoMysql(cur, pdData, table_name,  init_data_size):
+def saveDataIntoMysql(cur, pdData, product_name, table_name,  init_data_size):
     pdNewData = pdData.ix[pdData.index[init_data_size:]]
     pdNewArray = np.array(pdNewData)
-    mysql_command = "INSERT INTO "+table_name+" (Price, OpenningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    sql_command = "USE " + table_name
+    cur.execute(sql_command)
+    mysql_command = "INSERT INTO "+product_name+" (Price, OpenningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
     for row in pdNewArray:
         cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
     cur.connection.commit()

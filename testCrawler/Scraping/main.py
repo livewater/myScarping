@@ -24,7 +24,7 @@ def pdDataPushBack(pdData_list, mysqlSavedNum_list, table_name, product_name, co
 
 # save the new url trieved data into mysql, and update the saved num flag
 def writeBackToMySQL(pdData_list, mysqlSavedNum_list,table_name, product_name, cur):
-    saveDataIntoMysql(cur, pdData_list[0], product_name, mysqlSavedNum_list[0])
+    saveDataIntoMysql(cur, pdData_list[0], product_name, table_name, mysqlSavedNum_list[0])
     #TO DO: multi-thread need locks
     mysqlSavedNum_list[0] = len(pdData_list[0].index)
     print(np.array(mysqlSavedNum_list[0]))
@@ -38,13 +38,13 @@ if __name__ == "__main__":
         #build up AuTD structure for shgold
         pdData_list = []  #Mysql + urltrieved 
         mysqlSavedNum_list = []  #data saved in mysql num
+        #list[0]: AuTD in shgold
         pdDataPushBack(pdData_list, mysqlSavedNum_list, "shgold", "AuTD", conn)
-        init_data_size = pdData_list[0].index.size
 
         #the data needs to be analyzed circularly, now the cycle is 3s
         scheduler = BlockingScheduler()
         scheduler.add_job(dataAnalyzed, "cron", args=["AuTD", "shgold", pdData_list], second="*/3")
-        #scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "shgold", "AuTD", cur], second="*/10")
+        scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "shgold", "AuTD", cur], second="*/10")
         scheduler.start()
 
     except pymysql.Error as e: 
