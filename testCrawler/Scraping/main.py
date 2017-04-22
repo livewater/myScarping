@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # encoding:utf-8
  
+import sys
+sys.path.append("../Notifications/")
 import urllib2, json, urllib
 import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler  
@@ -9,11 +11,14 @@ import pandas as pd
 import pymysql
 from collect_data import *
 from save_data import *
+from send_mail import *
 
 #  jisuapi.com require category
 def dataAnalyzed(product_name, table_name, pdData_list):
     json_data = getDataInJson(table_name)
     pdData_list[0] = appendPdDataForShgold(pdData_list[0], json_data, product_name)
+    if(pdData_list[0]["Price"][0] > 225.0):
+        sendMail()
     print(len(pdData_list[0].index))
 
 # only execute once, dump the MySQL data into pdData_list
@@ -43,9 +48,11 @@ if __name__ == "__main__":
 
         #the data needs to be analyzed circularly, now the cycle is 3s
         scheduler = BlockingScheduler()
-        scheduler.add_job(dataAnalyzed, "cron", args=["AuTD", "shgold", pdData_list], second="*/3")
-        scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "shgold", "AuTD", cur], second="*/10")
+        scheduler.add_job(dataAnalyzed, "cron", args=["AuTD", "shgold", pdData_list], second="*/5")
+        #scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "shgold", "AuTD", cur], second="*/10")
         scheduler.start()
+        #dataAnalyzed("AuTD", "shgold", pdData_list)
+
 
     except pymysql.Error as e: 
         print('Got error {!r}, errno is {}'.format(e, e.args[0]))

@@ -16,7 +16,8 @@ mailInfo = {
     "mailencoding": "utf-8"
 }
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+def sendMail():
     smtp = SMTP_SSL(mailInfo["hostname"])
     smtp.set_debuglevel(1)
     smtp.ehlo(mailInfo["hostname"])
