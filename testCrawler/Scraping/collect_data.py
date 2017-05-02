@@ -25,11 +25,11 @@ check_list_bank = [u"美元账户黄金", u"美元账户铂金", u"美元账户�
 #data["appkey"] = "0fb7150dc4ce3494"
 #url_values = urllib.urlencode(data)
 def getDataInJson(req):
-    #category_values = urllib.urlencode(req)
-    #url = "http://api.jisuapi.com/gold/"+ category_values + "?appkey=0fb7150dc4ce3494"
-    #request = urllib2.Request(url)
-    #result = urllib2.urlopen(request)
-    jsonarr = json.load(open('../Test/shgold.json',"r"))
+    url = "http://api.jisuapi.com/gold/"+ req + "?appkey=0fb7150dc4ce3494"
+    request = urllib2.Request(url)
+    result = urllib2.urlopen(request)
+    jsonarr = json.loads(result.read())
+    #jsonarr = json.load(open('../Test/bank.json',"r"))
      
     if jsonarr["status"] != u"0": 
         print jsonarr["msg"]
@@ -42,7 +42,7 @@ def saveDataShGold(cur, conn):
     result = getDataInJson("shgold")
     index = 0
     for req in req_list_shgold:
-        sql_command = "INSERT INTO " + req_list_shgold[index] +" (Price, OpenningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        sql_command = "INSERT INTO " + req_list_shgold[index] +" (Price, OpeningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         if(result[cate_map_shgold[req]]["typename"] == check_list_shgold[cate_map_shgold[req]]):
             cur.execute(sql_command, ( result[cate_map_shgold[req]]["price"], result[cate_map_shgold[req]]["openingprice"], result[cate_map_shgold[req]]["maxprice"], result[cate_map_shgold[req]]["minprice"], result[cate_map_shgold[req]]["lastclosingprice"], result[cate_map_shgold[req]]["tradeamount"], result[cate_map_shgold[req]]["updatetime"]))
             index += 1
@@ -52,21 +52,20 @@ def saveDataShGold(cur, conn):
             exit()
     cur.connection.commit()
 
-'''def saveDataBank(cur, conn):
+def saveDataBank(cur, conn):
     cur.execute("USE bank")
     result = getDataInJson("bank")
-    index = 0
+    index = 3
     for req in req_list_bank:
-        sql_command = "INSERT INTO " + req_list_bank[index] + " (MidPrice, BuyPrice, SellPrice, MaxPrice, MinPrice, OpenningPrice, LastClosingPrice, ChangeQuantity, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql_command = "INSERT INTO " + req_list_bank[index] + " (MidPrice, BuyPrice, SellPrice, MaxPrice, MinPrice, OpeningPrice, LastClosingPrice, ChangeQuantity, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
         if(result[cate_map_bank[req]]["typename"] == check_list_bank[cate_map_bank[req]]):
-            cur.execute(sql_command, ( result[cate_map_bank[req]]["midprice"], result[cate_map_bank[req]]["buyprice"], result[cate_map_bank[req]]["sellprice"],result[cate_map_bank[req]]["maxprice"], result[cate_map_bank[req]]["minprice"], result[cate_map_bank[req]]["openningprice"], result[cate_map_bank[req]]["lastclosingprice"], result[cate_map_bank[req]]["changequantity"], result[cate_map_bank[req]]["updatetime"]))
+            cur.execute(sql_command, ( result[cate_map_bank[req]]["midprice"], result[cate_map_bank[req]]["buyprice"], result[cate_map_bank[req]]["sellprice"],result[cate_map_bank[req]]["maxprice"], result[cate_map_bank[req]]["minprice"], result[cate_map_bank[req]]["openingprice"], result[cate_map_bank[req]]["lastclosingprice"], result[cate_map_bank[req]]["changequantity"], result[cate_map_bank[req]]["updatetime"]))
             index += 1
         else:
             print("API changed, need to check!\n")
             closeDB(cur, conn)
             exit()
     cur.connection.commit()
-'''
 
 #for val in result:
 #    print val["type"],val["typename"],val["price"],val["openingprice"],val["maxprice"],val["minprice"],val["changepercent"],val["lastclosingprice"],val["tradeamount"],val["updatetime"]
@@ -88,10 +87,15 @@ def genCurrentTime():
     res = time.strftime(time_format, localtime)
     return res
 
-def appendPdDataForShgold(pdData, json_data, table_name):
-    ##json_data = getDataInJson(req)
-    item = json_data[cate_map_shgold[table_name]] 
-    pdData = pdData.append({'Price':item["price"], 'OpenningPrice':item["openingprice"], 'MaxPrice':item["maxprice"], 'MinPrice':item["minprice"], 'LastClosingPrice':item["lastclosingprice"], 'TradeAmount':item["tradeamount"], 'UpdateTime':item["updatetime"], 'CreatedTime':genCurrentTime()}, ignore_index=True) 
+def appendPdData(pdData, json_data, product_name, table_name):
+    if table_name == "shgold":
+        item = json_data[cate_map_shgold[product_name]] 
+        pdData = pdData.append({'Price':item["price"], 'OpeningPrice':item["openingprice"], 'MaxPrice':item["maxprice"], 'MinPrice':item["minprice"], 'LastClosingPrice':item["lastclosingprice"], 'TradeAmount':item["tradeamount"], 'UpdateTime':item["updatetime"], 'CreatedTime':genCurrentTime()}, ignore_index=True) 
+    elif table_name == "bank":
+        item = json_data[cate_map_bank[product_name]] 
+        pdData = pdData.append({'MidPrice':item["midprice"], 'BuyPrice':item["buyprice"], 'SellPrice':item["sellprice"], 'MaxPrice':item["maxprice"], 'MinPrice':item["minprice"], 'OpeningPrice':item["openingprice"], 'LastClosingPrice':item["lastclosingprice"], 'ChangeQuantity':item["changequantity"],'UpdateTime':item["updatetime"], 'CreatedTime':genCurrentTime()}, ignore_index=True) 
+    else:
+        print("Unknow table name!\n")
     return pdData
 
 #存储本次新抓取数据，然后同步到数据库
@@ -100,9 +104,17 @@ def saveDataIntoMysql(cur, pdData, product_name, table_name,  init_data_size):
     pdNewArray = np.array(pdNewData)
     sql_command = "USE " + table_name
     cur.execute(sql_command)
-    mysql_command = "INSERT INTO "+product_name+" (Price, OpenningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-    for row in pdNewArray:
-        cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+    if table_name == "shgold":
+        mysql_command = "INSERT INTO "+product_name+" (Price, OpeningPrice, MaxPrice, MinPrice, LastClosingPrice, TradeAmount, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        for row in pdNewArray:
+            cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+    elif table_name == "bank":
+        mysql_command = "INSERT INTO "+product_name+" (MidPrice, BuyPrice, SellPrice, MaxPrice, MinPrice, OpeningPrice, LastClosingPrice, ChangeQuantity, UpdateTime) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        for row in pdNewArray:
+            cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]))
+    else:
+        print("Unknow table name!\n")
+
     cur.connection.commit()
 
 def closeDB(cur, conn):
