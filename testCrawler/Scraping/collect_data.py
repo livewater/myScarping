@@ -29,7 +29,7 @@ def getDataInJson(req):
     request = urllib2.Request(url)
     result = urllib2.urlopen(request)
     jsonarr = json.loads(result.read())
-    #jsonarr = json.load(open('../Test/bank.json',"r"))
+#    jsonarr = json.load(open('../Test/bank.json',"r"))
      
     if jsonarr["status"] != u"0": 
         print jsonarr["msg"]
@@ -66,9 +66,6 @@ def saveDataBank(cur, conn):
             closeDB(cur, conn)
             exit()
     cur.connection.commit()
-
-#for val in result:
-#    print val["type"],val["typename"],val["price"],val["openingprice"],val["maxprice"],val["minprice"],val["changepercent"],val["lastclosingprice"],val["tradeamount"],val["updatetime"]
 
 #将数据从mysql中导入到pandas结构
 def loadMysqlToPandas(conn, product_name, table_name):

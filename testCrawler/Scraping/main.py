@@ -21,20 +21,12 @@ if __name__ == "__main__":
         pdData_list = []  #Mysql + urltrieved 
         mysqlSavedNum_list = []  #data saved in mysql num
         #list[0]: AuTD in shgold
-        #pdDataPushBack(pdData_list, mysqlSavedNum_list, "shgold", "AuTD", conn)
-        pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "AuRMB", conn)
-        '''pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "PtRMB", conn)
-        pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "PdRMB", conn)
-        pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "AuUSD", conn)
-        pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "PtUSD", conn)
-        pdDataPushBack(pdData_list, mysqlSavedNum_list, "bank", "PdUSD", conn)'''
+        pdBankDataPushBack(pdData_list, mysqlSavedNum_list, conn)
 
         #the data needs to be analyzed circularly, now the cycle is 3s
         scheduler = BlockingScheduler()
-        #scheduler.add_job(dataAnalyzed, "cron", args=["AuTD", "shgold", pdData_list], minute="*/3")
-        scheduler.add_job(dataAnalyzed, "cron", args=["AuRMB", "bank", pdData_list], second="*/3")
-        #scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "shgold", "AuTD", cur], minute="*/12")
-        scheduler.add_job(writeBackToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, "bank", "AuRMB", cur], second ="*/10")
+        scheduler.add_job(dataAnalyzed, "cron", args=["bank", pdData_list], second="*/3")
+        scheduler.add_job(writeBankDataToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list, cur], second ="*/10")
         scheduler.start()
         #dataAnalyzed("AuTD", "shgold", pdData_list)
 
