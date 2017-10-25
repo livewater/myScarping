@@ -1,16 +1,10 @@
 #!/usr/bin/python
 # encoding:utf-8
  
-import urllib2, json, urllib
-import datetime
-from apscheduler.schedulers.blocking import BlockingScheduler  
-import numpy as np
-import pandas as pd
+import logging
 import pymysql
-from collect_data import *
-from save_data import *
-from analyze_data import *
-from FinDataBank import *
+from apscheduler.schedulers.blocking import BlockingScheduler  
+from FinDataBank import FinDataBank
 
 if __name__ == "__main__":
     try:
@@ -26,9 +20,10 @@ if __name__ == "__main__":
         fin_data_bank.pdBankDataPushBack(pdData_list, mysqlSavedNum_list)
 
         #the data needs to be analyzed circularly, now the cycle is 3s
+        logging.basicConfig()
         scheduler = BlockingScheduler()
-        scheduler.add_job(fin_data_bank.dataAnalyzed, "cron", args=[pdData_list], second="*/3")
-        scheduler.add_job(fin_data_bank.writeBankDataToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list], second ="*/10")
+        scheduler.add_job(fin_data_bank.dataAnalyzed, "cron", args=[pdData_list], second="*/10")
+        scheduler.add_job(fin_data_bank.writeBankDataToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list], second ="*/35")
         scheduler.start()
         #fin_data_bank.dataAnalyzed(pdData_list)
         #fin_data_bank.writeBankDataToMySQL(pdData_list, mysqlSavedNum_list)

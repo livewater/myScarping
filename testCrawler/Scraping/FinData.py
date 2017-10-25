@@ -1,8 +1,8 @@
+#!/usr/bin/python
+# encoding:utf-8
 import urllib2, json, urllib
 import pymysql
-import numpy as np
 import pandas as pd
-import commands
 import time
 
 class FinData(object):
@@ -10,6 +10,7 @@ class FinData(object):
     def __init__(self, req, conn):
         self.req = req
         self.conn = conn
+        self.cur = conn.cursor()
 
     def getDataInJson(self):
         url = "http://api.jisuapi.com/gold/"+ self.req + "?appkey=0fb7150dc4ce3494"
@@ -25,9 +26,8 @@ class FinData(object):
         return result
 
     def loadMysqlToPandas(self, product_name, table_name):
-        cur = self.conn.cursor()
         sql_command = "USE " + product_name
-        cur.execute(sql_command)
+        self.cur.execute(sql_command)
         sql_command = "SELECT * from "+ table_name
         data = pd.io.sql.read_sql(sql_command, self.conn) 
         data = data.drop(['ID'], axis=1)
@@ -41,6 +41,6 @@ class FinData(object):
         return res
 
     def closeDB(self):
-        self.conn.cursor().close()
+        self.cur.close()
         self.conn.close()
 
