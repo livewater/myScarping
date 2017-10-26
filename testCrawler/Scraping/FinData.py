@@ -7,20 +7,21 @@ import time
 
 class FinData(object):
     '''the base class from jisuapi'''
-    def __init__(self, req, conn):
+    def __init__(self, url, req, conn):
+        self.url = url
         self.req = req
         self.conn = conn
         self.cur = conn.cursor()
 
     def getDataInJson(self):
-        url = "http://api.jisuapi.com/gold/"+ self.req + "?appkey=0fb7150dc4ce3494"
+        #url = "http://api.jisuapi.com/gold/"+ self.req + "?appkey=0fb7150dc4ce3494"
         #url = "http://api.k780.com/?app=finance.gzgold&appkey=29115&sign=51ab5331f653425bced95c234149cc88&format=json"
-        request = urllib2.Request(url)
+        request = urllib2.Request(self.url)
         result = urllib2.urlopen(request)
         jsonarr = json.loads(result.read())
     #    jsonarr = json.load(open('../Test/bank.json',"r"))
          
-        if jsonarr["status"] != u"0": 
+        if jsonarr["success"] != u"1": 
             print jsonarr["msg"]
             exit()
         result = jsonarr["result"]

@@ -4,7 +4,7 @@
 import logging
 import pymysql
 from apscheduler.schedulers.blocking import BlockingScheduler  
-from FinDataBank import FinDataBank
+from FinDataNowAPI import FinDataNowAPI
 
 if __name__ == "__main__":
     try:
@@ -15,15 +15,16 @@ if __name__ == "__main__":
         #build up AuTD structure for shgold
         pdData_list = []  #Mysql + urltrieved 
         mysqlSavedNum_list = []  #data saved in mysql num
-        fin_data_bank = FinDataBank("bank", conn)
+        url = "http://api.k780.com/?app=finance.gzgold&appkey=29115&sign=51ab5331f653425bced95c234149cc88&format=json"
+        fin_data_nowapi = FinDataNowAPI(url, "nowapi", conn)
         #list[0]: AuTD in shgold
-        fin_data_bank.pdBankDataPushBack(pdData_list, mysqlSavedNum_list)
+        fin_data_nowapi.pdBankDataPushBack(pdData_list, mysqlSavedNum_list)
 
         #the data needs to be analyzed circularly, now the cycle is 3s
         logging.basicConfig()
         scheduler = BlockingScheduler()
-        scheduler.add_job(fin_data_bank.dataAnalyzed, "cron", args=[pdData_list], second="*/10")
-        scheduler.add_job(fin_data_bank.writeBankDataToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list], second ="*/35")
+        scheduler.add_job(fin_data_nowapi.dataAnalyzed, "cron", args=[pdData_list], minute="*/1")
+        scheduler.add_job(fin_data_nowapi.writeBankDataToMySQL, "cron", args=[pdData_list, mysqlSavedNum_list], minute ="*/5")
         scheduler.start()
         #fin_data_bank.dataAnalyzed(pdData_list)
         #fin_data_bank.writeBankDataToMySQL(pdData_list, mysqlSavedNum_list)
@@ -33,6 +34,6 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
     finally:
-        scheduler.shutdown()  
+        #scheduler.shutdown()  
         cur.close()
         conn.close()
