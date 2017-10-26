@@ -14,6 +14,7 @@ class FinData(object):
 
     def getDataInJson(self):
         url = "http://api.jisuapi.com/gold/"+ self.req + "?appkey=0fb7150dc4ce3494"
+        #url = "http://api.k780.com/?app=finance.gzgold&appkey=29115&sign=51ab5331f653425bced95c234149cc88&format=json"
         request = urllib2.Request(url)
         result = urllib2.urlopen(request)
         jsonarr = json.loads(result.read())
