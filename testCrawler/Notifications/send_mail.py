@@ -4,28 +4,27 @@ from smtplib import SMTP_SSL
 from email.header import Header
 from email.mime.text import MIMEText
 
-mailInfo = {
+FinDataMailInfo = {
     "from": "549121944@qq.com",
     "to": "gjk282@126.com",
     "hostname": "smtp.qq.com",
     "username": "549121944@qq.com",
-    #"password": "glg@#568033kai",
-    "password": "razatykjngqwbffh",
-    "mailsubject": "this is test",
+    "password": "zxfyzmmltwfsbbii",
+    "mailsubject": "FinData Report",
     "mailtext": "hello, this is send mail test.",
     "mailencoding": "utf-8"
 }
 
-#if __name__ == '__main__':
-def sendMail():
-    smtp = SMTP_SSL(mailInfo["hostname"])
+if __name__ == '__main__':
+#def sendMail():
+    smtp = SMTP_SSL(FinDataMailInfo["hostname"])
     smtp.set_debuglevel(1)
-    smtp.ehlo(mailInfo["hostname"])
-    smtp.login(mailInfo["username"],mailInfo["password"])
+    smtp.ehlo(FinDataMailInfo["hostname"])
+    smtp.login(FinDataMailInfo["username"],FinDataMailInfo["password"])
     
-    msg = MIMEText(mailInfo["mailtext"],"plain",mailInfo["mailencoding"])
-    msg["Subject"] = Header(mailInfo["mailsubject"],mailInfo["mailencoding"])
-    msg["from"] = mailInfo["from"]
-    msg["to"] = mailInfo["to"]
-    smtp.sendmail(mailInfo["from"], mailInfo["to"], msg.as_string())
+    msg = MIMEText(FinDataMailInfo["mailtext"],"plain",FinDataMailInfo["mailencoding"])
+    msg["Subject"] = Header(FinDataMailInfo["mailsubject"],FinDataMailInfo["mailencoding"])
+    msg["from"] = FinDataMailInfo["from"]
+    msg["to"] = FinDataMailInfo["to"]
+    smtp.sendmail(FinDataMailInfo["from"], FinDataMailInfo["to"], msg.as_string())
     smtp.quit()
