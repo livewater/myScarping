@@ -56,11 +56,9 @@ class FinDataNowAPI(FinData):
         #sql_command = "USE " + self.req
         #self.cur.execute(sql_command)
         mysql_command = "INSERT INTO "+product_name+" (last_price, high_price, low_price, buy_price, sell_price, update_time) VALUES (%s, %s, %s, %s, %s, %s)"
-        for row in pdNewArray:
-            self.lock.acquire()
-            self.cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5]))
-            self.lock.release()
         self.lock.acquire()
+        for row in pdNewArray:
+            self.cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5]))
         self.cur.connection.commit()
         self.lock.release()
 
@@ -77,14 +75,12 @@ class FinDataNowAPI(FinData):
             mysql_command = "SELECT * FROM "+ self.req_list[product_idx] +" WHERE create_time BETWEEN '"+ date_range[0] + "' AND '"+ date_range[1] + "'"
             self.lock.acquire()
             self.cur.execute(mysql_command)
-            self.lock.release()
             result = np.array(self.cur.fetchall())
             extract_result.append(result)
-            self.lock.acquire()
             self.cur.connection.commit()
-            self.lock.release()
             self.cur.close()
             self.cur = self.conn.cursor()
+            self.lock.release()
         return extract_result
     
     def drawSellPriceFigure(self, date_range):
@@ -93,10 +89,8 @@ class FinDataNowAPI(FinData):
             mysql_command = "SELECT sell_price FROM "+ self.req_list[product_idx] +" WHERE create_time BETWEEN '"+ date_range[0] + "' AND '"+ date_range[1] + "'"
             self.lock.acquire()
             self.cur.execute(mysql_command)
-            self.lock.release()
             result = np.array(self.cur.fetchall())
             sell_price_list.append(result)
-            self.lock.acquire()
             self.cur.connection.commit()
             self.lock.release()
 
@@ -107,9 +101,11 @@ class FinDataNowAPI(FinData):
             plt.plot(range(len(sell_price_list[product_idx])), sell_price_list[product_idx], lw=1.0, color='r')
             #ax.set_xticklabels([], fontsize = 6)
         #TO DO: consider the picture name
-        plt.savefig("/home/livewater/Projects/myScarping/testCrawler/Scraping/test.png")
+        plt.savefig("test.png")
+        self.lock.acquire()
         self.cur.close()
         self.cur = self.conn.cursor()
+        self.lock.release()
 
     def reportByMail(self):
         mail_msg = ""
@@ -127,4 +123,4 @@ class FinDataNowAPI(FinData):
             for item_idx in range(0, len(extract_result[product_idx])):
                 mail_msg += "<tr><td>" + str(extract_result[product_idx][item_idx][1]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][2]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][3]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][4]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][5]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][6]).ljust(10) + "</td></tr>"
             mail_msg += "</table><br />"
-        super(FinDataNowAPI, self).sendMail(mail_msg, "/home/livewater/Projects/myScarping/testCrawler/Scraping/test.png")
+        super(FinDataNowAPI, self).sendMail(mail_msg, "test.png")
