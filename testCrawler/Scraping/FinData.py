@@ -15,7 +15,8 @@ from email.mime.multipart import MIMEMultipart
 
 class FinData(object):
     '''the base class from jisuapi'''
-    def __init__(self, url, req, conn):
+    def __init__(self, debug, url, req, conn):
+        self.debug = debug
         self.url = url
         self.req = req
         self.conn = conn
@@ -35,12 +36,15 @@ class FinData(object):
     def getDataInJson(self):
         #url = "http://api.jisuapi.com/gold/"+ self.req + "?appkey=0fb7150dc4ce3494"
         #url = "http://api.k780.com/?app=finance.gzgold&appkey=29115&sign=51ab5331f653425bced95c234149cc88&format=json"
-        request = urllib2.Request(self.url)
-        result = urllib2.urlopen(request)
-        jsonarr = json.loads(result.read())
-    #    jsonarr = json.load(open('../Test/bank.json',"r"))
-         
+        if self.debug == False:
+            request = urllib2.Request(self.url)
+            result = urllib2.urlopen(request)
+            jsonarr = json.loads(result.read())
+        else:
+            with open("../Test/nowapi_gzgold.json", "r") as f:
+                jsonarr = json.load(f)
         return jsonarr
+    #    jsonarr = json.load(open('../Test/bank.json',"r"))
 
     def loadMysqlToPandas(self, product_name, table_name):
         lock = threading.Lock()
@@ -65,8 +69,7 @@ class FinData(object):
         start_tick = end_tick - 3600 * hours
         end_time = time.localtime(end_tick)
         start_time = time.localtime(start_tick)
-        return [time.strftime(time_format, start_time), time.strftime(time_format, end_time)
-]
+        return [time.strftime(time_format, start_time), time.strftime(time_format, end_time)]
 
     def closeDB(self):
         self.cur.close()
@@ -79,7 +82,7 @@ class FinData(object):
         smtp.login(self.mail_info["username"],self.mail_info["password"])
         
         msg = MIMEMultipart()
-        msg.attach(MIMEText('<html><body><h1>'+ mail_msg+'</h1>' + '<p><img src="cid:image1"></p>' + '</body></html>', 'html', 'utf-8'))
+        msg.attach(MIMEText('<html><body>' + '<p><img src="cid:image1"></p>' + '<h1>'+ mail_msg+'</h1>' + '</body></html>', 'html', 'utf-8'))
         fp = open(mail_pic_path, 'rb')
         msgImage = MIMEImage(fp.read())
         fp.close
