@@ -24,14 +24,16 @@ if __name__ == "__main__":
 
         #the data needs to be analyzed circularly, now the cycle is 3s
         logging.basicConfig()
-        '''scheduler = BlockingScheduler()
-        scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3")
-        scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29")
-        scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3")
-        scheduler.start()'''
-        fin_data_nowapi.pdDataListUpdate()
-        fin_data_nowapi.DBUpdate()
-        fin_data_nowapi.reportByMail()
+        if debug_mode == False:
+            scheduler = BlockingScheduler()
+            scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3")
+            scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29")
+            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3")
+            scheduler.start()
+        else:
+            fin_data_nowapi.pdDataListUpdate()
+            fin_data_nowapi.DBUpdate()
+            fin_data_nowapi.reportByMail()
         #fin_data_nowapi.pdDataExtract("2017-10-27 22:30:00", "2017-10-27 23:00:00")
 
     except pymysql.Error as e:
