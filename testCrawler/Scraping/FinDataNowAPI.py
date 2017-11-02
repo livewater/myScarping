@@ -56,8 +56,10 @@ class FinDataNowAPI(FinData):
         pdNewArray = np.array(pdNewData)
         mysql_command = "INSERT INTO "+product_name+" (last_price, high_price, low_price, buy_price, sell_price, update_time) VALUES (%s, %s, %s, %s, %s, %s)"
         self.lock.acquire()
-        for row in pdNewArray:
-            self.cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5]))
+        pdNewArray = (pdNewArray.take(range(6), axis=1)).tolist()
+        self.cur.executemany(mysql_command, pdNewArray)
+        #for row in pdNewArray:
+            #self.cur.execute(mysql_command, (row[0], row[1], row[2], row[3], row[4], row[5]))
 
         if self.debug == False:
             self.cur.connection.commit()
