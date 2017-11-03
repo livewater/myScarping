@@ -23,12 +23,13 @@ if __name__ == "__main__":
         fin_data_nowapi.pdDataListInit()
 
         #the data needs to be analyzed circularly, now the cycle is 3s
+        stop_time = '2017-11-04 04:00:00'
         logging.basicConfig()
         if debug_mode == False:
             scheduler = BlockingScheduler()
-            scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3")
-            scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29")
-            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3")
+            scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3", end_date=stop_time)
+            scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29", end_date=stop_time)
+            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3", end_date=stop_time)
             scheduler.start()
         else:
             fin_data_nowapi.pdDataListUpdate()
