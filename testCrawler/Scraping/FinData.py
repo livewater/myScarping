@@ -27,7 +27,7 @@ class FinData(object):
             #"to": "lingwang@zju.edu.cn",
             "hostname": "smtp.qq.com",
             "username": "549121944@qq.com",
-            "password": "zxfyzmmltwfsbbii",
+            "password": "gxqxuaquicwzbehd",
             "mailsubject": "FinData Report",
             #"mailtext": "hello, this is send mail test.",
             "mailencoding": "utf-8"
