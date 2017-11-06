@@ -30,7 +30,7 @@ if __name__ == "__main__":
             scheduler = BlockingScheduler()
             scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3",start_date = start_time, end_date=stop_time)
             scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29", start_date = start_time,end_date=stop_time)
-            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], second ="*/3", start_date = start_time, end_date=stop_time)
+            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3", start_date = start_time, end_date=stop_time)
             scheduler.start()
         else:
             fin_data_nowapi.pdDataListUpdate()
@@ -45,6 +45,6 @@ if __name__ == "__main__":
         cur.close()
         conn.close()
     finally:
-        #scheduler.shutdown()  
+        scheduler.shutdown()  
         cur.close()
         conn.close()
