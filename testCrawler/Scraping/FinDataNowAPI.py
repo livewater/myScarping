@@ -22,6 +22,7 @@ class FinDataNowAPI(FinData):
         self.figure_hour = 6
         self.lock = threading.Lock()
         self.window = 10
+        self.alert_msg_head = "Alert Product: "
 
     #pdData_list: store the mysql data
     #mysqlSavedNum_list: calc the mysql data for every category
@@ -141,7 +142,7 @@ class FinDataNowAPI(FinData):
         #print "Success!"
 
     def checkAlert(self):
-        alert_msg = "Alert Product: "
+        alert_msg = self.alert_msg_head
         for product_idx in range(0, len(self.req_list)):
             neg_flag = 0
             pos_flag = 0
@@ -159,6 +160,7 @@ class FinDataNowAPI(FinData):
             max_price = np.max(data_in_window)
             min_price = np.min(data_in_window)
             mean_price = np.mean(data_in_window)
+            #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), 0.005*mean_price
             if ((np.abs(max_price - min_price) > 0.005*mean_price) or (neg_flag >=0.2*self.window or pos_flag >= 0.2*self.window)):
                 alert_msg += (self.req_list[product_idx] + ", ")
 
@@ -166,6 +168,6 @@ class FinDataNowAPI(FinData):
 
     def sendAlertMail(self, fig_name = "alert.png"):
         alert_msg = self.checkAlert()
-        if(alert_msg != ""):
+        if(alert_msg != self.alert_msg_head):
             self.reportByMail(alert_msg, fig_name)
 
