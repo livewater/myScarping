@@ -26,16 +26,19 @@ if __name__ == "__main__":
         start_time = '2017-11-06 08:02:00'
         stop_time = '2017-11-11 04:00:00'
         logging.basicConfig()
+        scheduler = BlockingScheduler()
         if debug_mode == False:
             scheduler = BlockingScheduler()
             scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3",start_date = start_time, end_date=stop_time)
             scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29", start_date = start_time,end_date=stop_time)
-            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[], hour ="*/3", start_date = start_time, end_date=stop_time)
+            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[""], hour ="*/3", start_date = start_time, end_date=stop_time)
+            scheduler.add_job(fin_data_nowapi.sendAlertMail, "cron", args=[], minute ="*/3", start_date = start_time, end_date=stop_time)
             scheduler.start()
         else:
             fin_data_nowapi.pdDataListUpdate()
             fin_data_nowapi.DBUpdate()
-            fin_data_nowapi.reportByMail()
+            fin_data_nowapi.reportByMail("")
+            fin_data_nowapi.sendAlertMail()
         #fin_data_nowapi.pdDataExtract("2017-10-27 22:30:00", "2017-10-27 23:00:00")
 
     except pymysql.Error as e:
@@ -45,6 +48,7 @@ if __name__ == "__main__":
         cur.close()
         conn.close()
     finally:
-        scheduler.shutdown()  
+        if debug_mode == False:
+            scheduler.shutdown()  
         cur.close()
         conn.close()

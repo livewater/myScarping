@@ -21,11 +21,7 @@ class FinDataNowAPI(FinData):
         self.report_hour = 0.1   #just for data verify
         self.figure_hour = 6
         self.lock = threading.Lock()
-
-
-    '''def appendPdData(self, json_data, product_name):
-        item = json_data[self.cate_map[product_name]]
-        self.pdData.append({'last_price':item["last_price"], 'high_price':item["high_price"], 'low_price':item["low_price"], 'buy_price':item["buy_price"], 'sell_price':item["sell_price"], 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True)''' 
+        self.window = 10
 
     #pdData_list: store the mysql data
     #mysqlSavedNum_list: calc the mysql data for every category
@@ -49,7 +45,10 @@ class FinDataNowAPI(FinData):
         for product_idx in range(0, len(self.req_list)):
             product_name = self.req_list[product_idx]
             item = json_data[self.cate_map[product_name]]
-            self.pdData_list[product_idx] = self.pdData_list[product_idx].append({'last_price':item["last_price"], 'high_price':item["high_price"], 'low_price':item["low_price"], 'buy_price':item["buy_price"], 'sell_price':item["sell_price"], 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True) 
+            self.lock.acquire()
+            self.pdData_list[product_idx] = self.pdData_list[product_idx].append({'last_price':float(item["last_price"]), 'high_price':float(item["high_price"]), 'low_price':float(item["low_price"]), 'buy_price':float(item["buy_price"]), 'sell_price':float(item["sell_price"]), 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True) 
+            self.mysqlSavedNum_list[product_idx] += 1
+            self.lock.release()
 
     def appendPdDataToDB(self, pdData, product_name, init_data_size):
         pdNewData = pdData.ix[pdData.index[init_data_size:]]
@@ -70,7 +69,7 @@ class FinDataNowAPI(FinData):
             product_name = self.req_list[product_idx]
             self.appendPdDataToDB(self.pdData_list[product_idx], product_name, self.mysqlSavedNum_list[product_idx])
             #TO DO: multi-thread need locks
-            self.mysqlSavedNum_list[product_idx] = len(self.pdData_list[product_idx].index)
+            #self.mysqlSavedNum_list[product_idx] = len(self.pdData_list[product_idx].index)
 
     def pdDataExtract(self, date_range):
         extract_result = []
@@ -86,7 +85,7 @@ class FinDataNowAPI(FinData):
             self.lock.release()
         return extract_result
     
-    def drawSellPriceFigure(self, date_range):
+    def drawSellPriceFigure(self, date_range, figure_name):
         sell_price_list = []
         for product_idx in range(0, len(self.req_list)):
             mysql_command = "SELECT sell_price FROM "+ self.req_list[product_idx] +" WHERE create_time BETWEEN '"+ date_range[0] + "' AND '"+ date_range[1] + "'"
@@ -104,13 +103,13 @@ class FinDataNowAPI(FinData):
             plt.plot(range(len(sell_price_list[product_idx])), sell_price_list[product_idx], lw=1.0, color='r')
             #ax.set_xticklabels([], fontsize = 6)
         #TO DO: consider the picture name
-        plt.savefig("report.png")
+        plt.savefig(figure_name)
         self.lock.acquire()
         self.cur.close()
         self.cur = self.conn.cursor()
         self.lock.release()
 
-    def genMailData(self):
+    def genMailData(self, alert_msg):
         #Just for test
         if self.debug == False:
             end_tick = int(time.time()) 
@@ -119,7 +118,7 @@ class FinDataNowAPI(FinData):
 
         report_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.report_hour)
         extract_result = self.pdDataExtract(report_date_range)
-        mail_msg = ""
+        mail_msg = '<h4>' + alert_msg + "</h4>"
         for product_idx in range(0, len(self.req_list)):
             mail_msg += '<h4>' + self.req_list[product_idx] + "</h4>"
             mail_msg += '<table border="1"><tr><th>last_price</th><th>high_price</th><th>low_price</th><th>buy_price</th><th>sell_price</th><th>update_time</th></tr>'
@@ -128,15 +127,45 @@ class FinDataNowAPI(FinData):
             mail_msg += "</table><br />"
         return mail_msg
 
-    def reportByMail(self):
+    def reportByMail(self, alert_msg, fig_name="report.png"):
         if self.debug == False:
             end_tick = int(time.time()) 
         else:
             end_tick = time.mktime(datetime.datetime(2017,11,1,11,0,0).timetuple())
 
         figure_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.figure_hour)
-        self.drawSellPriceFigure(figure_date_range)
+        self.drawSellPriceFigure(figure_date_range, fig_name)
         #Now turn off data tranferring 
-        mail_msg = self.genMailData()
-        #mail_msg = ""
-        super(FinDataNowAPI, self).sendMail(mail_msg, "report.png")
+        mail_msg = self.genMailData(alert_msg)
+        super(FinDataNowAPI, self).sendMail(mail_msg, fig_name)
+        #print "Success!"
+
+    def checkAlert(self):
+        alert_msg = "Alert Product: "
+        for product_idx in range(0, len(self.req_list)):
+            neg_flag = 0
+            pos_flag = 0
+            self.lock.acquire()
+            pdData = self.pdData_list[product_idx]['sell_price']
+            base = self.mysqlSavedNum_list[product_idx]
+            self.lock.release()
+            for check_idx in range(-self.window, 0):
+                delta = pdData[base+check_idx]-pdData[base+check_idx-1]
+                if delta > 0:
+                    pos_flag += 1
+                elif delta < 0:
+                    neg_flag += 1 
+            data_in_window = np.array(pdData[base-self.window-1:])
+            max_price = np.max(data_in_window)
+            min_price = np.min(data_in_window)
+            mean_price = np.mean(data_in_window)
+            if ((np.abs(max_price - min_price) > 0.005*mean_price) or (neg_flag >=0.2*self.window or pos_flag >= 0.2*self.window)):
+                alert_msg += (self.req_list[product_idx] + ", ")
+
+        return alert_msg
+
+    def sendAlertMail(self, fig_name = "alert.png"):
+        alert_msg = self.checkAlert()
+        if(alert_msg != ""):
+            self.reportByMail(alert_msg, fig_name)
+
