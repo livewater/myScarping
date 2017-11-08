@@ -23,7 +23,7 @@ class FinDataNowAPI(FinData):
         self.figure_hour = 6
         self.lock = threading.Lock()
         self.window = 10
-        self.alert_msg_head = "Alert Product: "
+        self.alert_msg_head = "<h2>Alert Product: <br /></h2>"
 
     #pdData_list: store the mysql data
     #mysqlSavedNum_list: calc the mysql data for every category
@@ -81,7 +81,8 @@ class FinDataNowAPI(FinData):
             self.cur.execute(mysql_command)
             result = np.array(self.cur.fetchall())
             extract_result.append(result)
-            self.cur.connection.commit()
+            if self.debug == False:
+                self.cur.connection.commit()
             self.cur.close()
             self.cur = self.conn.cursor()
             self.lock.release()
@@ -95,7 +96,8 @@ class FinDataNowAPI(FinData):
             self.cur.execute(mysql_command)
             result = np.array(self.cur.fetchall())
             sell_price_list.append(result)
-            self.cur.connection.commit()
+            if self.debug == False:
+                self.cur.connection.commit()
             self.lock.release()
 
         fig = plt.figure(figsize = (15, 15))
@@ -119,7 +121,7 @@ class FinDataNowAPI(FinData):
 
         report_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.report_hour)
         extract_result = self.pdDataExtract(report_date_range)
-        mail_msg = '<h4>' + alert_msg + "</h4>"
+        mail_msg = '<h3><font color="#FF0000">' + alert_msg + "</font></h3>"
         for product_idx in range(0, len(self.req_list)):
             mail_msg += '<h4>' + self.req_list[product_idx] + "</h4>"
             mail_msg += '<table border="1"><tr><th>last_price</th><th>high_price</th><th>low_price</th><th>buy_price</th><th>sell_price</th><th>update_time</th></tr>'
@@ -162,7 +164,8 @@ class FinDataNowAPI(FinData):
             mean_price = np.mean(data_in_window)
             #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price
             if ((np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price) or (neg_flag >=de.Decimal(0.2)*self.window or pos_flag >= de.Decimal(0.2)*self.window)):
-                alert_msg += (self.req_list[product_idx] + ", ")
+                alert_msg += (self.req_list[product_idx] + ", max_price=" + str(max_price) +" , min_price=" + str(min_price) \
+                        +" , mean_price=" + str(mean_price.quantize(de.Decimal('0.0000'))) + ", pos_flag=" + str(pos_flag) + ", neg_flag=" + str(neg_flag) + "<br />")
 
         return alert_msg
 
