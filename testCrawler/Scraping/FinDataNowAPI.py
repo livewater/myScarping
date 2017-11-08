@@ -177,7 +177,7 @@ class FinDataNowAPI(FinData):
     def sendAlertMail(self, fig_name = "alert.png"):
         alert_msg = self.checkAlert()
         if(alert_msg != self.alert_msg_head):
-            if (self.alert_timer == 0)
+            if (self.alert_timer == 0):
                 self.reportByMail(alert_msg, fig_name)
                 self.alert_timer = 4
 
