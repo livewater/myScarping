@@ -53,7 +53,7 @@ class FinDataNowAPI(FinData):
             self.lock.release()
 
     def appendPdDataToDB(self, pdData, product_name, init_data_size):
-        pdNewData = pdData.ix[pdData.index[init_data_size:]]
+        pdNewData = pdData.ix[pdData.index[init_data_size-1:]]
         pdNewArray = np.array(pdNewData)
         mysql_command = "INSERT INTO "+product_name+" (last_price, high_price, low_price, buy_price, sell_price, update_time) VALUES (%s, %s, %s, %s, %s, %s)"
         self.lock.acquire()
@@ -104,7 +104,6 @@ class FinDataNowAPI(FinData):
             plt.title(self.req_list[product_idx], {'fontsize': 8})
             plt.plot(range(len(sell_price_list[product_idx])), sell_price_list[product_idx], lw=1.0, color='r')
             #ax.set_xticklabels([], fontsize = 6)
-        #TO DO: consider the picture name
         plt.savefig(figure_name)
         self.lock.acquire()
         self.cur.close()
