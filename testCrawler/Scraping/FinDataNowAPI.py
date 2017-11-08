@@ -55,7 +55,7 @@ class FinDataNowAPI(FinData):
             self.lock.release()
 
     def appendPdDataToDB(self, pdData, product_name, init_data_size):
-        pdNewData = pdData.ix[pdData.index[init_data_size-1:]]
+        pdNewData = pdData.ix[pdData.index[init_data_size:]]
         pdNewArray = np.array(pdNewData)
         mysql_command = "INSERT INTO "+product_name+" (last_price, high_price, low_price, buy_price, sell_price, update_time) VALUES (%s, %s, %s, %s, %s, %s)"
         self.lock.acquire()
