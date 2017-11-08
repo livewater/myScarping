@@ -8,6 +8,7 @@ import datetime
 import threading
 import numpy as np
 import pandas as pd
+import decimal as de
 from FinData import FinData
 
 class FinDataNowAPI(FinData):
@@ -47,7 +48,7 @@ class FinDataNowAPI(FinData):
             product_name = self.req_list[product_idx]
             item = json_data[self.cate_map[product_name]]
             self.lock.acquire()
-            self.pdData_list[product_idx] = self.pdData_list[product_idx].append({'last_price':float(item["last_price"]), 'high_price':float(item["high_price"]), 'low_price':float(item["low_price"]), 'buy_price':float(item["buy_price"]), 'sell_price':float(item["sell_price"]), 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True) 
+            self.pdData_list[product_idx] = self.pdData_list[product_idx].append({'last_price':de.Decimal(item["last_price"]), 'high_price':de.Decimal(item["high_price"]), 'low_price':de.Decimal(item["low_price"]), 'buy_price':de.Decimal(item["buy_price"]), 'sell_price':de.Decimal(item["sell_price"]), 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True) 
             self.mysqlSavedNum_list[product_idx] += 1
             self.lock.release()
 
@@ -160,8 +161,8 @@ class FinDataNowAPI(FinData):
             max_price = np.max(data_in_window)
             min_price = np.min(data_in_window)
             mean_price = np.mean(data_in_window)
-            #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), 0.005*mean_price
-            if ((np.abs(max_price - min_price) > 0.005*mean_price) or (neg_flag >=0.2*self.window or pos_flag >= 0.2*self.window)):
+            #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price
+            if ((np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price) or (neg_flag >=de.Decimal(0.2)*self.window or pos_flag >= de.Decimal(0.2)*self.window)):
                 alert_msg += (self.req_list[product_idx] + ", ")
 
         return alert_msg

@@ -53,7 +53,7 @@ class FinData(object):
         self.cur.execute(sql_command)
         lock.release()
         sql_command = "SELECT * from "+ table_name
-        data = pd.io.sql.read_sql(sql_command, self.conn) 
+        data = pd.io.sql.read_sql(sql_command, self.conn, coerce_float=False) 
         data = data.drop(['ID'], axis=1)
         return data
 
