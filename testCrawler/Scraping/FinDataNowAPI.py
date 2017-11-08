@@ -18,7 +18,8 @@ class FinDataNowAPI(FinData):
         self.cate_map = {"USDAAU": "1151", "CNYAAU": "1152", "USDAAG": "1153", "CNYAAG": "1154", "USDAPT": "1155", "CNYAPT": "1156", "USDAPD": "1157", "CNYAPD": "1158"}
         self.req_list = ["USDAAU", "CNYAAU", "USDAAG", "CNYAAG", "USDAPT", "CNYAPT", "USDAPD", "CNYAPD"]
         self.pdData_list = []
-        self.mysqlSavedNum_list = []
+        self.mysqlSavedNum_list = []  # the record num in mysql
+        self.savedNum_list = []  # the record num now = saved + not saved
         self.report_hour = 0.1   #just for data verify
         self.figure_hour = 6
         self.lock = threading.Lock()
@@ -33,6 +34,7 @@ class FinDataNowAPI(FinData):
             pdData = super(FinDataNowAPI, self).loadMysqlToPandas(self.req, product_name)
             self.pdData_list.append(pdData)
             self.mysqlSavedNum_list.append(len(self.pdData_list[product_idx].index))
+            self.savedNum_list.append(len(self.pdData_list[product_idx].index))
 
     def checkJsonData(self, jsonarr):
         if jsonarr["success"] != u"1": 
@@ -49,7 +51,7 @@ class FinDataNowAPI(FinData):
             item = json_data[self.cate_map[product_name]]
             self.lock.acquire()
             self.pdData_list[product_idx] = self.pdData_list[product_idx].append({'last_price':de.Decimal(item["last_price"]), 'high_price':de.Decimal(item["high_price"]), 'low_price':de.Decimal(item["low_price"]), 'buy_price':de.Decimal(item["buy_price"]), 'sell_price':de.Decimal(item["sell_price"]), 'update_time':item["uptime"], 'create_time':super(FinDataNowAPI, self).genCurrentTime()}, ignore_index=True) 
-            self.mysqlSavedNum_list[product_idx] += 1
+            self.savedNum_list[product_idx] += 1
             self.lock.release()
 
     def appendPdDataToDB(self, pdData, product_name, init_data_size):
@@ -70,6 +72,8 @@ class FinDataNowAPI(FinData):
         for product_idx in range(0, len(self.req_list)):
             product_name = self.req_list[product_idx]
             self.appendPdDataToDB(self.pdData_list[product_idx], product_name, self.mysqlSavedNum_list[product_idx])
+            self.mysqlSavedNum_list[product_idx] = self.savedNum_list[product_idx]
+
             #TO DO: multi-thread need locks
             #self.mysqlSavedNum_list[product_idx] = len(self.pdData_list[product_idx].index)
 
@@ -150,7 +154,7 @@ class FinDataNowAPI(FinData):
             pos_flag = 0
             self.lock.acquire()
             pdData = self.pdData_list[product_idx]['sell_price']
-            base = self.mysqlSavedNum_list[product_idx]
+            base = self.savedNum_list[product_idx]
             self.lock.release()
             for check_idx in range(-self.window, 0):
                 delta = pdData[base+check_idx]-pdData[base+check_idx-1]
