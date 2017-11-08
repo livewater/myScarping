@@ -24,6 +24,7 @@ class FinDataNowAPI(FinData):
         self.figure_hour = 6
         self.lock = threading.Lock()
         self.window = 10
+        self.alert_timer = 0
         self.alert_msg_head = "<h2>Alert Product: <br /></h2>"
 
     #pdData_list: store the mysql data
@@ -176,5 +177,9 @@ class FinDataNowAPI(FinData):
     def sendAlertMail(self, fig_name = "alert.png"):
         alert_msg = self.checkAlert()
         if(alert_msg != self.alert_msg_head):
-            self.reportByMail(alert_msg, fig_name)
+            if (self.alert_timer == 0)
+                self.reportByMail(alert_msg, fig_name)
+                self.alert_timer = 4
 
+        # the alert mail will delivered after 3*cycles
+        self.alert_timer = self.alert_timer-1
