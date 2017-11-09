@@ -122,7 +122,7 @@ class FinDataNowAPI(FinData):
         if self.debug == False:
             end_tick = int(time.time()) 
         else:
-            end_tick = time.mktime(datetime.datetime(2017,11,1,11,0,0).timetuple())
+            end_tick = time.mktime(datetime.datetime(2017,11,9,4,0,0).timetuple())
 
         report_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.report_hour)
         extract_result = self.pdDataExtract(report_date_range)
@@ -139,7 +139,7 @@ class FinDataNowAPI(FinData):
         if self.debug == False:
             end_tick = int(time.time()) 
         else:
-            end_tick = time.mktime(datetime.datetime(2017,11,1,11,0,0).timetuple())
+            end_tick = time.mktime(datetime.datetime(2017,11,9,4,0,0).timetuple())
 
         figure_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.figure_hour)
         self.drawSellPriceFigure(figure_date_range, fig_name)
@@ -167,8 +167,8 @@ class FinDataNowAPI(FinData):
             max_price = np.max(data_in_window)
             min_price = np.min(data_in_window)
             mean_price = np.mean(data_in_window)
-            #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price
-            if ((np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price) or (neg_flag >=de.Decimal(0.2)*self.window or pos_flag >= de.Decimal(0.2)*self.window)):
+            #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price,(np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price)
+            if ((np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price) or (neg_flag >=de.Decimal(0.7)*self.window or pos_flag >= de.Decimal(0.7)*self.window)):
                 alert_msg += (self.req_list[product_idx] + ", max_price=" + str(max_price) +" , min_price=" + str(min_price) \
                         +" , mean_price=" + str(mean_price.quantize(de.Decimal('0.0000'))) + ", pos_flag=" + str(pos_flag) + ", neg_flag=" + str(neg_flag) + "<br />")
 
