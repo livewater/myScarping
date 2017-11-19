@@ -33,14 +33,16 @@ if __name__ == "__main__":
             scheduler = BlockingScheduler()
             scheduler.add_job(fin_data_nowapi.pdDataListUpdate, "cron", args=[], minute="*/3",start_date = start_time, end_date=end_time)
             scheduler.add_job(fin_data_nowapi.DBUpdate, "cron", args=[], minute ="*/29", start_date = start_time, end_date=end_time)
-            scheduler.add_job(fin_data_nowapi.reportByMail, "cron", args=[""], hour ="*/2", start_date = start_time, end_date=end_time)
+            scheduler.add_job(fin_data_nowapi.reportNormalByMail, "cron", args=[""], hour ="*/2", start_date = start_time, end_date=end_time)
             scheduler.add_job(fin_data_nowapi.sendAlertMail, "cron", args=[], minute ="*/5", start_date = start_time, end_date=end_time)
+            scheduler.add_job(fin_data_nowapi.sendWeeklyMail, "date", args=[], run_date = end_time)
             scheduler.start()
         else:
             fin_data_nowapi.pdDataListUpdate()
             fin_data_nowapi.DBUpdate()
-            fin_data_nowapi.reportByMail("")
+            fin_data_nowapi.reportNormalByMail()
             fin_data_nowapi.sendAlertMail()
+            fin_data_nowapi.sendWeeklyMail()
 
     except pymysql.Error as e:
         print('Got error {!r}, errno is {}'.format(e, e.args[0]))

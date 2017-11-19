@@ -22,6 +22,7 @@ class FinData(object):
         self.req = req
         self.conn = conn
         self.cur = conn.cursor()
+        self.time_format = "%Y-%m-%d %H:%M:%S"
         self.mail_info = {
             "from": "549121944@qq.com",
             "to": "gvineyard@163.com",
@@ -61,29 +62,29 @@ class FinData(object):
     def genCurrentTime(self):
         now = int(time.time()) 
         localtime = time.localtime(now)
-        time_format = "%Y-%m-%d %H:%M:%S"
-        res = time.strftime(time_format, localtime)
+        res = time.strftime(self.time_format, localtime)
         return res
 
     def genDateRange(self, end_tick, hours):
-        time_format = "%Y-%m-%d %H:%M:%S"
         start_tick = end_tick - 3600 * hours
         end_time = time.localtime(end_tick)
         start_time = time.localtime(start_tick)
-        return [time.strftime(time_format, start_time), time.strftime(time_format, end_time)]
+        return [time.strftime(self.time_format, start_time), time.strftime(self.time_format, end_time)]
 
     def genStartEndTime(self):
-        time_format = "%Y-%m-%d %H:%M:%S"
         now = datetime.datetime.now()
-        start_time = now.replace(hour=8, minute=0, second=0)
-        end_time = start_time + datetime.timedelta(days=4, hours=20)
-        return [start_time.strftime(time_format), end_time.strftime(time_format)]
+        if self.debug == False:
+            self.start_time = now.replace(hour=8, minute=0, second=0)
+        else:
+            self.start_time = datetime.datetime(2017, 11, 13, 8, 0, 0, 0)
+        self.end_time = self.start_time + datetime.timedelta(days=4, hours=20)
+        return [self.start_time.strftime(self.time_format), self.end_time.strftime(self.time_format)]
 
     def closeDB(self):
         self.cur.close()
         self.conn.close()
 
-    def sendMail(self, mail_msg, mail_pic_path):
+    def sendMail(self, mail_msg, mail_pic_path, mail_category=''):
         smtp = SMTP_SSL(self.mail_info["hostname"])
         smtp.set_debuglevel(1)
         smtp.ehlo(self.mail_info["hostname"])
@@ -98,7 +99,7 @@ class FinData(object):
 
         msg.attach(msgImage)
         #msg = MIMEText(mail_msg,"plain",self.mail_info["mailencoding"])
-        msg["Subject"] = Header(self.mail_info["mailsubject"] + "--" + self.genCurrentTime(), self.mail_info["mailencoding"])
+        msg["Subject"] = Header(mail_category +self.mail_info["mailsubject"] + "--" + self.genCurrentTime(), self.mail_info["mailencoding"])
         msg["from"] = self.mail_info["from"]
         msg["to"] = self.mail_info["to"]
         smtp.sendmail(self.mail_info["from"], self.mail_info["to"], msg.as_string())

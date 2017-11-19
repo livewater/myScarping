@@ -20,11 +20,12 @@ class FinDataNowAPI(FinData):
         self.pdData_list = []
         self.mysqlSavedNum_list = []  # the record num in mysql
         self.savedNum_list = []  # the record num now = saved + not saved
-        self.report_hour = 0.1   #just for data verify
-        self.figure_hour = 6
+        self.alert_window = 10 # using by alert mail, checking the alert_window latest data
+        self.alert_timer = 0 # alert timer, only when it reaches 0, the alert mail can be sent
+        self.verify_hour = 0.1   # using by alert mail, just for data verify
+        self.weekly_rpt_hour = 116 # the program will be running 4 days and 20 hours
+        self.normal_rpt_hour = 6 # normal report will only check the 6 hours data
         self.lock = threading.Lock()
-        self.window = 10
-        self.alert_timer = 0
         self.alert_msg_head = "<h2>Alert Product: <br /></h2>"
 
     #pdData_list: store the mysql data
@@ -124,7 +125,7 @@ class FinDataNowAPI(FinData):
         else:
             end_tick = time.mktime(datetime.datetime(2017,11,9,4,0,0).timetuple())
 
-        report_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.report_hour)
+        report_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.verify_hour)
         extract_result = self.pdDataExtract(report_date_range)
         mail_msg = '<h3><font color="#FF0000">' + alert_msg + "</font></h3>"
         for product_idx in range(0, len(self.req_list)):
@@ -134,19 +135,25 @@ class FinDataNowAPI(FinData):
                 mail_msg += "<tr><td>" + str(extract_result[product_idx][item_idx][1]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][2]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][3]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][4]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][5]).ljust(10) + "</td><td>" + str(extract_result[product_idx][item_idx][6]).ljust(10) + "</td></tr>"
             mail_msg += "</table><br />"
         return mail_msg
+    
+    def reportByMail(self, alert_msg, end_tick, duration, fig_name="report.png"):
+        ''' alert_msg: if some alert things happen, alert msg will be filled
+            duration: the data window size, unit is hour'''
+        figure_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, duration)
+        self.drawSellPriceFigure(figure_date_range, fig_name)
+        mail_msg = self.genMailData(alert_msg)
+        mail_category = ''
+        if(duration == self.weekly_rpt_hour):
+            mail_category = '******Weekly Report******\n'
+        super(FinDataNowAPI, self).sendMail(mail_msg, fig_name, mail_category)
+        #print "Success!"
 
-    def reportByMail(self, alert_msg, fig_name="report.png"):
+    def reportNormalByMail(self, alert_msg = '', fig_name="report.png"):
         if self.debug == False:
             end_tick = int(time.time()) 
         else:
             end_tick = time.mktime(datetime.datetime(2017,11,9,4,0,0).timetuple())
-
-        figure_date_range = super(FinDataNowAPI, self).genDateRange(end_tick, self.figure_hour)
-        self.drawSellPriceFigure(figure_date_range, fig_name)
-        #Now turn off data tranferring 
-        mail_msg = self.genMailData(alert_msg)
-        super(FinDataNowAPI, self).sendMail(mail_msg, fig_name)
-        #print "Success!"
+        self.reportByMail(alert_msg, end_tick, self.normal_rpt_hour, fig_name)
 
     def checkAlert(self):
         alert_msg = self.alert_msg_head
@@ -157,18 +164,18 @@ class FinDataNowAPI(FinData):
             pdData = self.pdData_list[product_idx]['sell_price']
             base = self.savedNum_list[product_idx]
             self.lock.release()
-            for check_idx in range(-self.window, 0):
+            for check_idx in range(-self.alert_window, 0):
                 delta = pdData[base+check_idx]-pdData[base+check_idx-1]
                 if delta > 0:
                     pos_flag += 1
                 elif delta < 0:
                     neg_flag += 1 
-            data_in_window = np.array(pdData[base-self.window-1:])
+            data_in_window = np.array(pdData[base-self.alert_window-1:])
             max_price = np.max(data_in_window)
             min_price = np.min(data_in_window)
             mean_price = np.mean(data_in_window)
             #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price,(np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price)
-            if ((np.abs(max_price - min_price) > de.Decimal(0.007)*mean_price) or (neg_flag >=de.Decimal(0.7)*self.window or pos_flag >= de.Decimal(0.7)*self.window)):
+            if ((np.abs(max_price - min_price) > de.Decimal(0.007)*mean_price) or (neg_flag >=de.Decimal(0.7)*self.alert_window or pos_flag >= de.Decimal(0.7)*self.alert_window)):
                 alert_msg += (self.req_list[product_idx] + ", max_price=" + str(max_price) +" , min_price=" + str(min_price) \
                         +" , mean_price=" + str(mean_price.quantize(de.Decimal('0.0000'))) + ", pos_flag=" + str(pos_flag) + ", neg_flag=" + str(neg_flag) + "<br />")
 
@@ -178,8 +185,20 @@ class FinDataNowAPI(FinData):
         alert_msg = self.checkAlert()
         if(alert_msg != self.alert_msg_head):
             if (self.alert_timer == 0):
-                self.reportByMail(alert_msg, fig_name)
+                if self.debug == False:
+                    end_tick = int(time.time()) 
+                else:
+                    end_tick = time.mktime(datetime.datetime(2017,11,9,4,0,0).timetuple())
+                self.reportByMail(alert_msg, end_tick, self.normal_rpt_hour, fig_name)
                 self.alert_timer = 4
 
         # the alert mail will be frozen 3 cycles
         self.alert_timer = self.alert_timer-1
+
+    def sendWeeklyMail(self, fig_name = "weekly.png"):
+        alert_msg = ''
+        if self.debug == False:
+            end_tick = int(time.mktime(self.end_time)) 
+        else:
+            end_tick = time.mktime(datetime.datetime(2017,11,18,4,0,0).timetuple())
+        self.reportByMail(alert_msg, end_tick, self.weekly_rpt_hour, fig_name)
