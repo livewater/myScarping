@@ -168,7 +168,7 @@ class FinDataNowAPI(FinData):
             min_price = np.min(data_in_window)
             mean_price = np.mean(data_in_window)
             #print pos_flag, neg_flag, data_in_window, np.abs(max_price - min_price), de.Decimal(0.005)*mean_price,(np.abs(max_price - min_price) > de.Decimal(0.005)*mean_price)
-            if ((np.abs(max_price - min_price) > de.Decimal(0.008)*mean_price) or (neg_flag >=de.Decimal(0.8)*self.window or pos_flag >= de.Decimal(0.8)*self.window)):
+            if ((np.abs(max_price - min_price) > de.Decimal(0.007)*mean_price) or (neg_flag >=de.Decimal(0.7)*self.window or pos_flag >= de.Decimal(0.7)*self.window)):
                 alert_msg += (self.req_list[product_idx] + ", max_price=" + str(max_price) +" , min_price=" + str(min_price) \
                         +" , mean_price=" + str(mean_price.quantize(de.Decimal('0.0000'))) + ", pos_flag=" + str(pos_flag) + ", neg_flag=" + str(neg_flag) + "<br />")
 
@@ -181,5 +181,5 @@ class FinDataNowAPI(FinData):
                 self.reportByMail(alert_msg, fig_name)
                 self.alert_timer = 4
 
-        # the alert mail will delivered after 3*cycles
+        # the alert mail will be frozen 3 cycles
         self.alert_timer = self.alert_timer-1

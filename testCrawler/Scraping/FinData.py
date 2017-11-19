@@ -5,6 +5,7 @@ import os, sys
 import smtplib
 import pymysql
 import time
+import datetime
 import threading
 import pandas as pd
 from smtplib import SMTP_SSL
@@ -70,6 +71,13 @@ class FinData(object):
         end_time = time.localtime(end_tick)
         start_time = time.localtime(start_tick)
         return [time.strftime(time_format, start_time), time.strftime(time_format, end_time)]
+
+    def genStartEndTime(self):
+        time_format = "%Y-%m-%d %H:%M:%S"
+        now = datetime.datetime.now()
+        start_time = now.replace(hour=8, minute=0, second=0)
+        end_time = start_time + datetime.timedelta(days=4, hours=20)
+        return [start_time.strftime(time_format), end_time.strftime(time_format)]
 
     def closeDB(self):
         self.cur.close()
