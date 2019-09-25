@@ -9,7 +9,7 @@ FinDataMailInfo = {
     "to": "gjk282@126.com",
     "hostname": "smtp.qq.com",
     "username": "549121944@qq.com",
-    "password": "zxfyzmmltwfsbbii",
+    "password": "kzjzwtazwfykbchb",
     "mailsubject": "FinData Report",
     "mailtext": "hello, this is send mail test.",
     "mailencoding": "utf-8"
