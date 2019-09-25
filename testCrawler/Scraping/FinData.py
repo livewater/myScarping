@@ -94,7 +94,7 @@ class FinData(object):
 
     def sendMail(self, mail_msg, mail_pic_path, mail_category=''):
         smtp = SMTP_SSL(self.mail_info["hostname"])
-        smtp.set_debuglevel(1)
+        smtp.set_debuglevel(0)
         smtp.ehlo(self.mail_info["hostname"])
         try:
             smtp.login(self.mail_info["username"],self.mail_info["password"])
