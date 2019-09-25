@@ -26,7 +26,6 @@ class FinData(object):
         self.mail_info = {
             "from": "549121944@qq.com",
             "to": "gvineyard@163.com",
-            #"to": "lingwang@zju.edu.cn",
             "hostname": "smtp.qq.com",
             "username": "549121944@qq.com",
             "password": "kzjzwtazwfykbchb",
@@ -40,11 +39,20 @@ class FinData(object):
         #url = "http://api.k780.com/?app=finance.gzgold&appkey=29115&sign=51ab5331f653425bced95c234149cc88&format=json"
         if self.debug == False:
             request = urllib2.Request(self.url)
-            result = urllib2.urlopen(request)
+            try:
+                result = urllib2.urlopen(request)
+            except:
+                print("##### Open the URL failed, try again!")
+                result = urllib2.urlopen(request)
             jsonarr = json.loads(result.read())
         else:
-            with open("../Test/nowapi_gzgold.json", "r") as f:
-                jsonarr = json.load(f)
+            try:
+                with open("../Test/nowapi_gzgold.json", "r") as f:
+                    jsonarr = json.load(f)
+            except:
+                print("##### Cannot open sample json file!")
+                sys.exit(-1)
+                
         return jsonarr
     #    jsonarr = json.load(open('../Test/bank.json',"r"))
 
@@ -88,13 +96,18 @@ class FinData(object):
         smtp = SMTP_SSL(self.mail_info["hostname"])
         smtp.set_debuglevel(1)
         smtp.ehlo(self.mail_info["hostname"])
-        smtp.login(self.mail_info["username"],self.mail_info["password"])
+        try:
+            smtp.login(self.mail_info["username"],self.mail_info["password"])
+        except:
+            print("##### Mail login failed!")
+            sys.exit(-1)
         
         msg = MIMEMultipart()
         msg.attach(MIMEText('<html><body>' + '<p><img src="cid:image1"></p>' + '<h1>'+ mail_msg+'</h1>' + '</body></html>', 'html', 'utf-8'))
-        fp = open(mail_pic_path, 'rb')
-        msgImage = MIMEImage(fp.read())
-        fp.close
+        with open(mail_pic_path, 'rb') as fp:
+            msgImage = MIMEImage(fp.read())
+            fp.close
+            
         msgImage.add_header('Content-ID', '<image1>')
 
         msg.attach(msgImage)
@@ -102,5 +115,10 @@ class FinData(object):
         msg["Subject"] = Header(mail_category +self.mail_info["mailsubject"] + "--" + self.genCurrentTime(), self.mail_info["mailencoding"])
         msg["from"] = self.mail_info["from"]
         msg["to"] = self.mail_info["to"]
-        smtp.sendmail(self.mail_info["from"], self.mail_info["to"], msg.as_string())
+        try:
+            smtp.sendmail(self.mail_info["from"], self.mail_info["to"], msg.as_string())
+        except:
+            print("##### Mail sending failed, try again!")
+            smtp.sendmail(self.mail_info["from"], self.mail_info["to"], msg.as_string())
+
         smtp.quit()
