@@ -13,7 +13,7 @@ if __name__ == "__main__":
         # debug switcher
         debug_mode = True
         # start MySQL
-        conn = pymysql.connect(host = 'localhost', user = 'root', password = passwd.passwd, db = 'mysql', charset = 'utf8')
+        conn = pymysql.connect(host = 'localhost', user = 'root', password = passwd.passwd, db = 'mysql', charset = 'utf8', port=3308)
         cur = conn.cursor()
 
         # build up AuTD structure for shgold
